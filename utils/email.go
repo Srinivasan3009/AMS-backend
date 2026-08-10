@@ -64,6 +64,7 @@ func SendGradeNotification(
 		subject,
 		to,
 		body,
+		body,
 	)
 
 	client := sendgrid.NewSendClient(apiKey)
