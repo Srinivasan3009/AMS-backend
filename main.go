@@ -25,13 +25,13 @@ func main() {
 
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
+		frontendURL = "https://srini-ams.netlify.app/"
 	}
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     frontendURL,
 		AllowCredentials: true,
-		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 	}))
 
 	// Public routes

@@ -56,8 +56,8 @@ func Login(c *fiber.Ctx) error {
 		Name:     "token",
 		Value:    token,
 		HTTPOnly: true,
-		Secure:   false, // set true in production (HTTPS only)
-		SameSite: "Lax",
+		Secure:   true,
+		SameSite: "None",
 		Path:     "/",
 	})
 
