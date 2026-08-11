@@ -226,6 +226,21 @@ func SubmitGrades(c *fiber.Ctx) error {
 			continue
 		}
 
+		// Check the existing grade (if any) BEFORE writing. If it's identical to what's
+		// being submitted, skip entirely - no DB write, no email. This is what actually
+		// prevents "editing one student re-notifies everyone" - it applies regardless of
+		// whether the unchanged rows came from an individual edit or a re-uploaded CSV
+		// that still contains everyone's previously-existing grades.
+		var existingGrade *string
+		err = tx.QueryRow(ctx, `
+			SELECT grade FROM grades WHERE register_no = $1 AND course_no = $2 AND term = $3
+		`, entry.RegisterNo, req.CourseNo, req.Term).Scan(&existingGrade)
+		// err == pgx.ErrNoRows just means no prior grade exists yet - that's fine, proceed.
+
+		if existingGrade != nil && *existingGrade == entry.Grade {
+			continue // no change - skip silently, not an error
+		}
+
 		_, err = tx.Exec(ctx, `
 			INSERT INTO grades (register_no, course_no, term, grade, graded_by)
 			VALUES ($1, $2, $3, $4, $5)
