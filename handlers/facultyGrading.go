@@ -285,3 +285,41 @@ func SubmitGrades(c *fiber.Ctx) error {
 		EmailFailures:  emailFailures,
 	})
 }
+
+// GetEmailLog (faculty) - returns this faculty member's own email notification
+// history (success and failure), most recent first, joined with student name
+// and course name for readability.
+func GetEmailLog(c *fiber.Ctx) error {
+	facultyID, err := getFacultyIDFromSession(c)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "faculty not found"})
+	}
+
+	rows, err := db.Pool.Query(context.Background(), `
+		SELECT e.id, e.register_no, sd.name, e.course_no, co.course_name, e.term, e.grade,
+		       e.status, e.failure_reason, e.sent_at::text
+		FROM email_logs e
+		JOIN student_details sd ON sd.register_no = e.register_no
+		JOIN courses co ON co.course_no = e.course_no
+		WHERE e.sent_by = $1
+		ORDER BY e.sent_at DESC
+	`, facultyID)
+	if err != nil {
+		log.Println("email log query error:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not fetch email log"})
+	}
+	defer rows.Close()
+
+	var logs []models.EmailLogEntry
+	for rows.Next() {
+		var e models.EmailLogEntry
+		if err := rows.Scan(&e.ID, &e.RegisterNo, &e.StudentName, &e.CourseNo, &e.CourseName,
+			&e.Term, &e.Grade, &e.Status, &e.FailureReason, &e.SentAt); err != nil {
+			log.Println("email log scan error:", err)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not read email log row"})
+		}
+		logs = append(logs, e)
+	}
+
+	return c.JSON(logs)
+}

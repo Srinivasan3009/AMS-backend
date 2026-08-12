@@ -12,7 +12,7 @@ import (
 )
 
 // CreateCourse inserts a new course. TCP is always recalculated server-side as L+T+P,
-// never trusted from the client, so it can't be tampered with or drift out of sync.
+
 func CreateCourse(c *fiber.Ctx) error {
 	var req models.CourseCreateRequest
 	if err := c.BodyParser(&req); err != nil {

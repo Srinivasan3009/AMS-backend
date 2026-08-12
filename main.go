@@ -79,7 +79,7 @@ func main() {
 	faculty.Get("/assigned-terms", handlers.GetAssignedTerms)
 	faculty.Get("/grade-roster", handlers.GetGradeRoster)
 	faculty.Post("/submit-grades", handlers.SubmitGrades)
-
+	faculty.Get("/email-log", handlers.GetEmailLog)
 	student := app.Group("/api/student", middleware.Protected(), middleware.RequireRole("student"))
 	student.Get("/dashboard", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"message": "student dashboard data"})

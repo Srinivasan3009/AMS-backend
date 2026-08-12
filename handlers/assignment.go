@@ -11,8 +11,7 @@ import (
 )
 
 // UpsertAssignment creates or updates the faculty assigned to a course for a given term.
-// Enforced by a UNIQUE(course_no, term) constraint - if an assignment already exists
-// for that course+term, the faculty is simply replaced (re-assignment).
+
 func UpsertAssignment(c *fiber.Ctx) error {
 	var req models.AssignmentRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -38,9 +37,7 @@ func UpsertAssignment(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "faculty assigned"})
 }
 
-// ListAssignments returns assignments filtered by term + department + semester (+ optional batch),
-// joined with faculty name, so the frontend can pre-populate the "Assign Faculty" dropdowns
-// with whoever is already assigned.
+// ListAssignments returns assignments filtered by term + department + semester (+ optional batch)
 func ListAssignments(c *fiber.Ctx) error {
 	term := c.Query("term")
 	department := c.Query("department")
