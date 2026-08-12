@@ -269,6 +269,47 @@ and uses Resend's API rather than SMTP.
 
 If email notifications are required, make sure a valid Resend API key is configured.
 
+## Grade Notification Delivery Logging
+
+When a faculty member submits or updates a student's grade, the system attempts to notify the student by email.
+
+The outcome of each notification attempt is recorded in the faculty member's email log:
+
+* **Success** — records that the notification was successfully sent.
+* **Failure** — records that the notification attempt failed.
+* The log provides a permanent record of the notification outcome for each student.
+* Faculty members can review the notification status from within the portal without needing to check an external email service.
+
+This provides visibility into whether each student was actually notified and allows faculty members to identify unsuccessful notification attempts.
+
+### Notification Flow
+
+```text
+Faculty submits/updates grade
+            │
+            ▼
+      Backend processes grade
+            │
+            ▼
+      Email notification
+            │
+       ┌────┴────┐
+       │         │
+    Success    Failure
+       │         │
+       └────┬────┘
+            ▼
+   Record notification
+       outcome in log
+            │
+            ▼
+      Faculty can view
+       delivery status
+```
+
+The notification log is maintained by the backend so that delivery outcomes remain available as part of the application's academic/notification records.
+
+
 ## CORS Configuration
 
 The backend reads the frontend URL from:
