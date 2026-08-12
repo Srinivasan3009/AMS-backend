@@ -270,11 +270,63 @@ func SubmitGrades(c *fiber.Ctx) error {
 	// a failed email never un-saves a grade, since the portal is always the
 	// source of truth and stays in sync regardless of email delivery.
 	var emailFailures []models.FailedGradeRow
+
 	for _, s := range toNotify {
-		err := utils.SendGradeNotification(s.Email, s.Name, req.CourseNo, courseName, req.Term, s.Grade)
+		err := utils.SendGradeNotification(
+			s.Email,
+			s.Name,
+			req.CourseNo,
+			courseName,
+			req.Term,
+			s.Grade,
+		)
+
+		// Default: email was successfully accepted by Resend.
+		status := "success"
+		var failureReason *string
+
 		if err != nil {
-			log.Println("grade email send error for", s.RegisterNo, ":", err)
-			emailFailures = append(emailFailures, models.FailedGradeRow{RegisterNo: s.RegisterNo, Reason: "email could not be sent"})
+			status = "failure"
+
+			reason := err.Error()
+			failureReason = &reason
+
+			log.Println(
+				"grade email send error for",
+				s.RegisterNo,
+				":",
+				err,
+			)
+
+			emailFailures = append(emailFailures, models.FailedGradeRow{
+				RegisterNo: s.RegisterNo,
+				Reason:     "email could not be sent",
+			})
+		}
+
+		// Save the email notification attempt to email_logs.
+		_, logErr := db.Pool.Exec(ctx, `
+		INSERT INTO email_logs
+			(register_no, course_no, term, grade, status, failure_reason, sent_by)
+		VALUES
+			($1, $2, $3, $4, $5, $6, $7)
+	`,
+			s.RegisterNo,
+			req.CourseNo,
+			req.Term,
+			s.Grade,
+			status,
+			failureReason,
+			facultyID,
+		)
+
+		if logErr != nil {
+			log.Println(
+				"failed to save email log for",
+				s.RegisterNo,
+				":",
+				logErr,
+			)
 		}
 	}
 
